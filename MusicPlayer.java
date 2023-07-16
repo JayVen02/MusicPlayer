@@ -5,132 +5,147 @@ import javax.sound.sampled.*;
 import javax.swing.*;
 import javax.swing.filechooser.*;
 
-public class MusicPlayer extends JFrame implements ActionListener{
+public class MusicPlayer extends JFrame implements ActionListener {
 
     private JTextField filePathField;
-
-    //4 Buttons 
-    private JButton playButton; //play
-    private JButton pauseButton; //pause
-    private JButton chooseButton; //choose
-    private JButton loopButton; //loop
+    private JButton playButton;
+    private JButton pauseButton;
+    private JButton chooseButton;
+    private JButton loopButton;
     private boolean isPaused;
     private boolean isLooping = false;
-    private JFileChooser fileChooser; 
+    private JFileChooser fileChooser;
     private Clip clip;
+    private JLabel statusLabel;
 
-    public MusicPlayer(){
+    public MusicPlayer() {
         super("Music Player");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new FlowLayout());
+        setLayout(new BorderLayout());
 
         filePathField = new JTextField(20);
         playButton = new JButton("Play");
         pauseButton = new JButton("Pause");
         chooseButton = new JButton("Choose File");
         loopButton = new JButton("Loop");
-        isPaused = false;
-        isLooping = false;
+        statusLabel = new JLabel("Status: Stopped");
 
         playButton.addActionListener(this);
         pauseButton.addActionListener(this);
         chooseButton.addActionListener(this);
         loopButton.addActionListener(this);
 
-        add(filePathField);
-        add(chooseButton);
-        add(playButton);
-        add(pauseButton);
-        add(loopButton);
+        JPanel controlPanel = new JPanel();
+        controlPanel.add(chooseButton);
+        controlPanel.add(playButton);
+        controlPanel.add(pauseButton);
+        controlPanel.add(loopButton);
+
+        JPanel filePanel = new JPanel();
+        filePanel.add(new JLabel("File: "));
+        filePanel.add(filePathField);
+
+        JPanel statusPanel = new JPanel();
+        statusPanel.add(statusLabel);
+
+        add(controlPanel, BorderLayout.CENTER);
+        add(filePanel, BorderLayout.NORTH);
+        add(statusPanel, BorderLayout.SOUTH);
 
         fileChooser = new JFileChooser(".");
-        fileChooser.setFileFilter(new FileNameExtensionFilter("MP3 files", "mp3"));
+        fileChooser.setFileFilter(new FileNameExtensionFilter("WAV Files", "wav"));
 
-        setSize(500, 100);
+        setSize(500, 150);
         setLocationRelativeTo(null);
         setVisible(true);
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        if (event.getSource() == playButton){
+
+        if (event.getSource() == playButton) {
             playMusic();
-        }else if(event.getSource() == pauseButton){
+        } else if (event.getSource() == pauseButton) {
             pauseMusic();
-        }else if(event.getSource() == chooseButton){
+        } else if (event.getSource() == chooseButton) {
             chooseFile();
-        }else if(event.getSource() == loopButton){
+        } else if (event.getSource() == loopButton) {
             toggleLoop();
         }
     }
 
-    private void playMusic(){
-        if(clip != null && clip.isRunning()){
+    private void playMusic() {
+
+        if (clip != null && clip.isRunning()) {
             clip.stop();
         }
 
-        try{
+        try {
             File file = new File(filePathField.getText());
             AudioInputStream audioIn = AudioSystem.getAudioInputStream(file);
 
             clip = AudioSystem.getClip();
             clip.open(audioIn);
 
-            if(isLooping){
+            if (isLooping) {
                 clip.loop(Clip.LOOP_CONTINUOUSLY);
             }
-            clip.start();
 
-        }catch(Exception e){
+            clip.start();
+            statusLabel.setText("Status: Playing");
+
+        } catch (Exception e) {
             System.out.println(e);
         }
+
     }
 
-    private void pauseMusic(){
-        if (clip != null && clip.isRunning()){
+    private void pauseMusic() {
+        if (clip != null && clip.isRunning()) {
             clip.stop();
             isPaused = true;
             pauseButton.setText("Resume");
-        }else if (clip != null && isPaused){
+            statusLabel.setText("Status: Paused");
+        } else if (clip != null && isPaused) {
             clip.start();
 
-            if(isLooping){
+            if (isLooping) {
                 clip.loop(Clip.LOOP_CONTINUOUSLY);
             }
 
             isPaused = false;
             pauseButton.setText("Pause");
+            statusLabel.setText("Status: Playing");
         }
     }
 
-    private void chooseFile(){
+    private void chooseFile() {
         fileChooser.setCurrentDirectory(new File("."));
         int result = fileChooser.showOpenDialog(this);
-        if(result == JFileChooser.APPROVE_OPTION){
+        if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
             filePathField.setText(selectedFile.getAbsolutePath());
         }
     }
 
-    private void toggleLoop(){
-        isLooping =! isLooping;
-        if(isLooping){
+    private void toggleLoop() {
+        isLooping = !isLooping;
+        if (isLooping) {
             loopButton.setText("Stop Loop");
 
-            if(clip.isRunning()){
+            if (clip.isRunning()) {
                 clip.loop(Clip.LOOP_CONTINUOUSLY);
-            
-            }else{
-                loopButton.setText("Loop");
+            }
+        } else {
+            loopButton.setText("Loop");
 
-                if(clip.isRunning()){
-                    clip.loop(0);
-                }
+            if (clip.isRunning()) {
+                clip.loop(0);
             }
         }
     }
 
- public static void main(String[] args){
-    new MusicPlayer();
-   }
+    public static void main(String[] args) {
+        new MusicPlayer();
+    }
 }
